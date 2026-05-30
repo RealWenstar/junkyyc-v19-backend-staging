@@ -7,6 +7,7 @@ require('dotenv').config();
 // Import Services & Config
 const { sendAdminLeadEmail, sendCustomerConfirmationEmail } = require('./src/services/email');
 const { sendTelegramOrder, sendTelegramCustomerConfirmation, sendTelegramAnalysis, sendTelegramContact } = require('./src/services/telegram');
+const { applySelectedExtras } = require('./src/services/booking');
 const {
   analyzeImagesWithOpenAI,
   buildAnalyzeResponse,
@@ -152,40 +153,16 @@ app.post('/api/book', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Recalculate final price with user-selected additional services
-    let finalPricing = { ...pricing };
-
-    if (services || helpers > 0) {
-      console.log('💰 Recalculating price with additional services...');
-
-      // Additional services
-      let extras = 0;
-      if (services?.disassembly) extras += 50;
-      if (services?.eco) extras += 40;
-      if (services?.sameDay) extras += 75;
-      extras += (helpers || 0) * 50;
-
-      // Recalculate totals
-      const newSubtotal = pricing.subtotal + extras;
-      const newGst = newSubtotal * 0.05;
-      const newTotal = newSubtotal + newGst;
-
-      finalPricing = {
-        ...pricing,
-        extras_price: extras,
-        subtotal: newSubtotal,
-        gst: newGst,
-        total: newTotal
-      };
-
-      console.log('💰 Final price recalculated:', {
-        baseSubtotal: pricing.subtotal,
-        extras: extras,
-        newSubtotal: newSubtotal,
-        gst: newGst,
-        finalTotal: newTotal
-      });
-    }
+    // Normalize frontend/backend pricing shapes and add selected services only if
+    // they were not already included by the client-side estimate.
+    const finalPricing = applySelectedExtras(pricing, services, helpers);
+    console.log('💰 Final price normalized:', {
+      baseSubtotal: pricing.subtotal,
+      extras: finalPricing.extras_price,
+      newSubtotal: finalPricing.subtotal,
+      gst: finalPricing.gst,
+      finalTotal: finalPricing.total
+    });
 
     // Generate order ID without database
     const orderId = `email-${Date.now()}`;
