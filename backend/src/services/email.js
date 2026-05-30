@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { normalizeBookingItems, normalizeBookingPricing } = require('./booking');
 require('dotenv').config();
 
 // #region agent log - Email transporter initialization
@@ -87,10 +88,10 @@ async function sendAdminLeadEmail(orderData) {
   console.log('📧 EMAIL: Starting admin email send...');
 
   const { customer, items, pricing, leadId, photos = [] } = orderData;
-
-  const itemsList = items.flatMap(group =>
-    group.items.map(item => `- ${item.name} (${item.category}) - Qty: ${item.qty}`)
-  ).join('\n');
+  const normalizedPricing = normalizeBookingPricing(pricing);
+  const itemsList = normalizeBookingItems(items)
+    .map(item => `- ${item.name} (${item.category}) - Qty: ${item.quantity}`)
+    .join('\n') || '- No items provided';
 
   // Prepare photo attachments
   const attachments = photos.map((photoBase64, index) => ({
@@ -127,14 +128,14 @@ async function sendAdminLeadEmail(orderData) {
       ${photosHtml}
 
       <h3>Pricing Estimate:</h3>
-      <p><strong>Base Fee:</strong> $${pricing.base || 0}</p>
-      <p><strong>Volume Cost:</strong> $${pricing.volumePrice || 0}</p>
-      <p><strong>Difficulty Surcharge:</strong> $${pricing.difficulty || 0}</p>
-      <p><strong>Additional Services:</strong> $${pricing.extras || 0}</p>
-      <p><strong>Subtotal:</strong> $${pricing.subtotal || 0}</p>
-      <p><strong>GST (5%):</strong> $${pricing.gst?.toFixed(2) || 0}</p>
-      <p><strong>Total:</strong> $${pricing.total?.toFixed(2) || 0}</p>
-      <p><strong>Volume:</strong> ${pricing.totalVolume?.toFixed(1) || 0} cubic yards</p>
+      <p><strong>Base Fee:</strong> $${normalizedPricing.base_price.toFixed(2)}</p>
+      <p><strong>Volume Cost:</strong> $${normalizedPricing.volume_price.toFixed(2)}</p>
+      <p><strong>Difficulty Surcharge:</strong> $${normalizedPricing.difficulty_price.toFixed(2)}</p>
+      <p><strong>Additional Services:</strong> $${normalizedPricing.extras_price.toFixed(2)}</p>
+      <p><strong>Subtotal:</strong> $${normalizedPricing.subtotal.toFixed(2)}</p>
+      <p><strong>GST (5%):</strong> $${normalizedPricing.gst.toFixed(2)}</p>
+      <p><strong>Total:</strong> $${normalizedPricing.total.toFixed(2)}</p>
+      <p><strong>Volume:</strong> ${normalizedPricing.volume_cy.toFixed(1)} cubic yards</p>
 
       <h3>Detected Items:</h3>
       <pre>${itemsList}</pre>
