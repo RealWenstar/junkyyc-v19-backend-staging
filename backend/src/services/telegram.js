@@ -11,6 +11,11 @@ if (bot) {
   console.log('⚠️ Telegram bot not configured (missing TELEGRAM_BOT_TOKEN)');
 }
 
+// Optional environment label prepended to every notification (e.g. "🧪 TEST · staging").
+// Prod leaves TELEGRAM_LABEL unset → no prefix. Staging sets it so test bookings are
+// visually distinct from real leads in the shared Junkalert channel.
+const MSG_LABEL = process.env.TELEGRAM_LABEL ? `${process.env.TELEGRAM_LABEL}\n` : '';
+
 // Auto-delete scheduled messages (message_id -> timeout_id)
 const scheduledDeletions = new Map();
 
@@ -84,7 +89,7 @@ async function sendTelegramOrder(orderData) {
       totalVolume = pricing?.totalVolume || pricing?.volume || 0;
     }
 
-    const message = `
+    const message = `${MSG_LABEL}
 🆔 *НОВЫЙ ЗАКАЗ #${leadId}*
 
 👤 *Клиент:*
@@ -178,7 +183,7 @@ async function sendTelegramAnalysis(leadId, items, pricing, images) {
     ).join('\n') || 'Нет предметов';
 
     // Create analysis message with detailed pricing
-    const message = `
+    const message = `${MSG_LABEL}
 🤖 *НОВЫЙ АНАЛИЗ ФОТО #${leadId}*
 
 📦 *Распознанные предметы:*
@@ -261,7 +266,7 @@ async function sendTelegramContact(leadId, customer, finalPricing = null) {
     const isManualBooking = leadId.startsWith('manual-');
 
     // Create contact message - different format for manual vs photo bookings
-    let message = `
+    let message = `${MSG_LABEL}
 👤 *КОНТАКТНЫЕ ДАННЫЕ ПОЛУЧЕНЫ #${leadId}*
 
 📞 *Клиент готов к заказу:*
