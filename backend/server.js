@@ -109,9 +109,9 @@ app.post('/api/analyze', async (req, res) => {
     console.log('- Recognition time:', recognition_ms, 'ms');
     console.log('- Lead ready for booking');
 
-    if (itemsWithVolume.length > 0) {
-      // TEMPORARY SOLUTION: Send analysis results to Telegram immediately
-      // This bypasses the complex booking data flow issues
+    if (itemsWithVolume.length > 0 && responsePayload.moderation && responsePayload.moderation.status === 'allow') {
+      // Forward to Telegram ONLY when moderation allows (don't push illegal/abusive
+      // uploads to the leads channel even if junk is also in frame). v1.x MVP gate.
       try {
         console.log('📱 TELEGRAM: Sending analysis results to Telegram...');
         await sendTelegramAnalysis(leadId, itemsWithVolume, pricing, images);
