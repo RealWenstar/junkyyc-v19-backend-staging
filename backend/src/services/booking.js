@@ -53,8 +53,8 @@ function applySelectedExtras(pricing = {}, services = {}, helpers = 0) {
   const subtotal = normalized.subtotal + additionalExtras;
   const gst = subtotal * 0.05;
   const rawTotal = subtotal + gst;
-  const total = normalized.minimumApplied && rawTotal < 200
-    ? 200
+  const total = normalized.minimumApplied && rawTotal < 80
+    ? 80
     : Math.max(rawTotal, normalized.total);
 
   return {
