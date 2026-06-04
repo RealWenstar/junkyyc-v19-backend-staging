@@ -102,9 +102,9 @@ function resolveItemVolume(item) {
   return volume;
 }
 
-// Calculate pricing with dynamic base fee (v1.6)
+// Calculate pricing with dynamic base fee (v1.9)
 function calculatePricing(items, useNewLogic = true) {
-  // Use new v1.6 dynamic pricing logic by default
+  // Use v1.9 dynamic pricing logic by default
   if (!useNewLogic) {
     return calculatePricingOld(items);
   }
@@ -165,15 +165,15 @@ function calculatePricing(items, useNewLogic = true) {
   // Determine dynamic base fee based on complexity score
   let baseFee;
   if (complexityScore >= 0.8) {
-    baseFee = 97; // Complex items
+    baseFee = 70; // Complex items (v1.9)
   } else if (complexityScore >= 0.5) {
-    baseFee = 90; // Mixed items
+    baseFee = 60; // Mixed items (v1.9)
   } else {
-    baseFee = 82; // Simple items
+    baseFee = 50; // Simple items (v1.9)
   }
 
-  // Volume fee: $29 per cubic yard (updated rate)
-  const volumeFee = totalVolume * 29;
+  // Volume fee: $20 per cubic yard (v1.9)
+  const volumeFee = totalVolume * 20;
 
   // Difficulty fee: HIGH=$5/unit, MEDIUM=$2/unit, LOW=$0
   let difficultyFee = 0;
@@ -196,14 +196,14 @@ function calculatePricing(items, useNewLogic = true) {
   // Calculate total before minimum check
   let calculatedTotal = subtotal + gst;
 
-  // Apply minimum price floor ($200)
+  // Apply minimum price floor ($80) - v1.9
   let minimumApplied = false;
-  if (calculatedTotal < 200) {
-    calculatedTotal = 200;
+  if (calculatedTotal < 80) {
+    calculatedTotal = 80;
     minimumApplied = true;
   }
 
-  // Return enriched pricing object (v1.6)
+  // Return enriched pricing object (v1.9)
   return {
     // Legacy fields for backward compatibility
     volume_cy: totalVolume,
@@ -216,7 +216,7 @@ function calculatePricing(items, useNewLogic = true) {
     total: calculatedTotal,
     total_items: totalItems,
 
-    // New v1.6 fields
+    // New v1.9 fields
     baseFee: baseFee,
     volumeFee: volumeFee,
     difficultyFee: difficultyFee,
